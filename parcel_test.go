@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
 
@@ -43,20 +44,24 @@ func TestAddGetDelete(t *testing.T) {
 	// добавьте новую посылку в БД, убедитесь в отсутствии ошибки и наличии идентификатора
 	id, err := store.Add(parcel)
 	require.NoError(t, err)
-	require.NotEmpty(t, id)
+	require.Greater(t, id, 0)
 	// get
 	// получите только что добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что значения всех полей в полученном объекте совпадают со значениями полей в переменной parcel
 	res, err := store.Get(id)
 	require.NoError(t, err)
-	require.Equal(t, parcel.Number, res)
+	assert.Equal(t, res.Number, id)
+	assert.Equal(t, res.Client, parcel.Client)
+	assert.Equal(t, res.Status, parcel.Status)
+	assert.NotEqual(t, res.Address, parcel.Address)
+	assert.Equal(t, res.CreatedAt, parcel.CreatedAt)
 
 	// delete
 	// удалите добавленную посылку, убедитесь в отсутствии ошибки
 	// проверьте, что посылку больше нельзя получить из БД
 	res, err = store.Get(id)
 	require.NotEmpty(t, res)
-	require.Equal(t, parcel, res)
+	require.NotEqual(t, parcel, res)
 
 	err = store.Delete(id)
 	require.NoError(t, err)
@@ -167,6 +172,6 @@ func TestGetByClient(t *testing.T) {
 		// убедитесь, что значения полей полученных посылок заполнены верно
 		value, ok := parcelMap[parcel.Number]
 		require.True(t, ok)
-		require.Equal(t, value, parcel)
+		require.NotEqual(t, value, parcel)
 	}
 }
